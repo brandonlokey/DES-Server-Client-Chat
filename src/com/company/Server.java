@@ -10,11 +10,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Scanner;
 
 public class Server {
     private Socket socket = null;
     private ServerSocket server = null;
     private DataInputStream in = null;
+    private DataOutputStream out = null;
+
     public Server(int port) {
         try {
             // Initialize server
@@ -27,21 +30,27 @@ public class Server {
             socket = server.accept();
             System.out.println("Client accepted.\n");
 
-            // Input stream
+            // Initialize input/output streams
             in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            out = new DataOutputStream(socket.getOutputStream());
+            Scanner input = new Scanner(System.in);
 
             // Get key
             Path path = Paths.get("KeyFile.txt");
             byte[] key = Files.readAllBytes(path);
             SecretKey desKey = new SecretKeySpec(key, 0, key.length, "DES");
 
-            // Initialize decrypter
-            Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, desKey);
+            // Initialize decrypter/encryptor
+            Cipher decipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+            decipher.init(Cipher.DECRYPT_MODE, desKey);
+
+            Cipher ecipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+            ecipher.init(Cipher.ENCRYPT_MODE, desKey);
 
             String decLine = "";
+            String sentLine = "";
 
-            while (!decLine.equals("Over")) {
+            while (!decLine.equals("Over") || !sentLine.equals("Over")) {
                 try {
                     int length = in.readInt();
 
@@ -51,15 +60,31 @@ public class Server {
                         in.readFully(message, 0, message.length);
 
                         // Decrypt it
-                        byte[] decBytes = cipher.doFinal(message);
+                        byte[] decBytes = decipher.doFinal(message);
                         decLine = new String(decBytes);
 
                         System.out.println("********************");
-                        //System.out.println("Encrypted (bytes): " + message);
                         System.out.println("Encrypted: " + new String(message));
-                        System.out.println("Key: " + new String(key));
+                        System.out.println("Key: " + key);
                         System.out.println("Decrypted: " + decLine);
                         System.out.println("********************");
+
+                        // Server responds
+                        System.out.println("\nEnter response: ");
+                        sentLine = input.nextLine();
+
+                        // Encrypt message
+                        byte[] encLine = ecipher.doFinal(sentLine.getBytes());
+
+                        System.out.println("********************");
+                        System.out.println("Plaintext: " + sentLine);
+                        System.out.println("Key: " + key);
+                        System.out.println("Encrypted: " + new String(encLine));
+                        System.out.println("********************");
+
+                        // Send to client
+                        out.writeInt(encLine.length);
+                        out.write(encLine);
                     }
                 }
                 catch(IOException i) {

@@ -12,6 +12,7 @@ public class Client {
     private Socket socket = null;
     private Scanner input = null;
     private DataOutputStream out = null;
+    private DataInputStream in = null;
 
     public Client(String address, int port) {
         try {
@@ -24,9 +25,12 @@ public class Client {
             socket = new Socket(address, port);
             System.out.println("Connected to the server.");
 
-            // Generate cipher
-            Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, myDesKey);
+            // Generate ciphers
+            Cipher ecipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+            ecipher.init(Cipher.ENCRYPT_MODE, myDesKey);
+
+            Cipher decipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+            decipher.init(Cipher.DECRYPT_MODE, myDesKey);
 
             // Write key to file
             File keyfile = new File("KeyFile.txt");
@@ -36,29 +40,48 @@ public class Client {
 
             // Initialize input/output streams
             input = new Scanner(System.in);
+            in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            String line = "";
+            String sentLine = "";
+            String decLine = "";
             // Take messages until "Over" entered
-            while(!line.equals("Over")) {
+            while(!sentLine.equals("Over") || !decLine.equals("Over")) {
                 try {
                     System.out.print("\nEnter text: ");
 
                     // Get line + encrypted line
-                    line = input.nextLine();
-                    byte[] encLine = cipher.doFinal(line.getBytes());
+                    sentLine = input.nextLine();
+                    byte[] encLine = ecipher.doFinal(sentLine.getBytes());
 
                     System.out.println("********************");
-                    System.out.println("Plaintext: " + line);
-                    //System.out.println("Plaintext (bytes): " + line.getBytes());
+                    System.out.println("Plaintext: " + sentLine);
                     System.out.println("Key: " + key);
                     System.out.println("Encrypted: " + new String(encLine));
-                    //System.out.println("Encrypted (bytes): " + encLine);
                     System.out.println("********************");
 
                     // Send to server
                     out.writeInt(encLine.length);
                     out.write(encLine);
+
+                    //Get message back from server
+                    int length = in.readInt();
+                    if (length > 0) {
+                        //Get bytes
+                        System.out.println("\nServer response");
+                        byte[] message = new byte[length];
+                        in.readFully(message, 0, message.length);
+
+                        // Decipher message
+                        byte[] decBytes = decipher.doFinal(message);
+                        decLine = new String(decBytes);
+
+                        System.out.println("********************");
+                        System.out.println("Encrypted: " + new String(message));
+                        System.out.println("Key: " + key);
+                        System.out.println("Decrypted: " + decLine);
+                        System.out.println("********************");
+                    }
                 }
                 catch(IOException i) {
                     System.out.println(i);
