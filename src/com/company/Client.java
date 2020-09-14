@@ -15,14 +15,14 @@ public class Client {
 
     public Client(String address, int port) {
         try {
-            // Connect to server
-            socket = new Socket(address, port);
-            System.out.println("Connected to the server.");
-
             // Generate key
             KeyGenerator keygenerator = KeyGenerator.getInstance("DES");
             SecretKey myDesKey = keygenerator.generateKey();
             byte[] key = myDesKey.getEncoded();
+
+            // Connect to server
+            socket = new Socket(address, port);
+            System.out.println("Connected to the server.");
 
             // Generate cipher
             Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
@@ -50,10 +50,10 @@ public class Client {
 
                     System.out.println("********************");
                     System.out.println("Plaintext: " + line);
-                    System.out.println("Plaintext (bytes): " + line.getBytes());
+                    //System.out.println("Plaintext (bytes): " + line.getBytes());
                     System.out.println("Key: " + key);
                     System.out.println("Encrypted: " + new String(encLine));
-                    System.out.println("Encrypted (bytes): " + encLine);
+                    //System.out.println("Encrypted (bytes): " + encLine);
                     System.out.println("********************");
 
                     // Send to server
