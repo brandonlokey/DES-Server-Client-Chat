@@ -1,9 +1,6 @@
 package com.company;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -47,16 +44,28 @@ public class Client {
                 try {
                     System.out.print("\nEnter text: ");
 
+                    // Get line + encrypted line
                     line = input.nextLine();
+                    byte[] encLine = cipher.doFinal(line.getBytes());
+
                     System.out.println("********************");
                     System.out.println("Plaintext: " + line);
+                    System.out.println("Plaintext (bytes): " + line.getBytes());
                     System.out.println("Key: " + key);
-                    System.out.println("Encrypted: ");
+                    System.out.println("Encrypted: " + new String(encLine));
+                    System.out.println("Encrypted (bytes): " + encLine);
                     System.out.println("********************");
-                    out.writeUTF(line);
+
+                    // Send to server
+                    out.writeInt(encLine.length);
+                    out.write(encLine);
                 }
                 catch(IOException i) {
                     System.out.println(i);
+                } catch (BadPaddingException e) {
+                    e.printStackTrace();
+                } catch (IllegalBlockSizeException e) {
+                    e.printStackTrace();
                 }
             }
 
