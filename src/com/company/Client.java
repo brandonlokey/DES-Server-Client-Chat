@@ -48,7 +48,7 @@ public class Client {
             // Take messages until "Over" entered
             while(!sentLine.equals("Over") || !decLine.equals("Over")) {
                 try {
-                    System.out.print("\nEnter text: ");
+                    System.out.print("\nEnter text (Type 'Over' to stop): ");
 
                     // Get line + encrypted line
                     sentLine = input.nextLine();
@@ -64,11 +64,15 @@ public class Client {
                     out.writeInt(encLine.length);
                     out.write(encLine);
 
+                    if (sentLine.equals("Over")) {
+                        break;
+                    }
+
                     //Get message back from server
                     int length = in.readInt();
                     if (length > 0) {
                         //Get bytes
-                        System.out.println("\nServer response");
+                        System.out.println("\nServer message");
                         byte[] message = new byte[length];
                         in.readFully(message, 0, message.length);
 

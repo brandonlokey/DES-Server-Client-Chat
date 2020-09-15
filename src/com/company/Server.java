@@ -55,6 +55,7 @@ public class Server {
                     int length = in.readInt();
 
                     if(length > 0) {
+                        System.out.println("\nClient message");
                         // Get message bytes
                         byte[] message = new byte[length];
                         in.readFully(message, 0, message.length);
@@ -69,8 +70,12 @@ public class Server {
                         System.out.println("Decrypted: " + decLine);
                         System.out.println("********************");
 
+                        if (decLine.equals("Over")) {
+                            break;
+                        }
+
                         // Server responds
-                        System.out.println("\nEnter response: ");
+                        System.out.print("\nEnter response (Type 'Over' to stop): ");
                         sentLine = input.nextLine();
 
                         // Encrypt message
