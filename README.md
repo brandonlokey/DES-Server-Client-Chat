@@ -10,4 +10,4 @@ Function: Utilize DES encryption in socket server/client chat application in whi
   
   How To Run: Run the Server application first and then run the Client one next. The console will let you know when
    you have established a connection and then the server and client should be able to take turns communicating with
-    each other. 
+    each other. The Server and Client files can be found in src/com/company.
